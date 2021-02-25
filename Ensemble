@@ -1,0 +1,24 @@
+''' y_hat을 다 구하고 걔네끼리 weight를 줘서 Ensemble '''
+# Point: differential_evolution에 fit된 model과 data를 넣음
+
+for i in range(n_members):
+	_, test_acc = members[i].evaluate(testX, testy_enc, verbose=0)
+	print('Model %d: %.3f' % (i+1, test_acc))
+# evaluate averaging ensemble (equal weights)
+weights = [1.0/n_members for _ in range(n_members)]
+score = evaluate_ensemble(members, weights, testX, testy)
+print('Equal Weights Score: %.3f' % score)
+# define bounds on each weight
+bound_w = [(0.0, 1.0)  for _ in range(n_members)]
+# arguments to the loss function
+search_arg = (members, testX, testy)
+# global optimization of ensemble weights
+result = differential_evolution(loss_function, bound_w, search_arg, maxiter=1000, tol=1e-7)
+# get the chosen weights
+weights = normalize(result['x'])
+print('Optimized Weights: %s' % weights)
+# evaluate chosen weights
+score = evaluate_ensemble(members, weights, testX, testy)
+print('Optimized Weights Score: %.3f' % score)
+
+# reference: https://machinelearningmastery.com/weighted-average-ensemble-for-deep-learning-neural-networks/
